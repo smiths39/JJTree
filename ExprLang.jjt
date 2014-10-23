@@ -1,0 +1,168 @@
+// Name:ExprLang.jjt
+// Author: David Sinclair      Date: 29 Aug 2012
+//
+// Definition of the ExprLang language, including abstract syntax tree generation
+//
+
+options
+{
+  IGNORE_CASE = false;
+  MULTI=true;
+  VISITOR = true;
+}
+
+PARSER_BEGIN(ExprLang)
+
+import java.io.*;
+import java.util.*;
+
+public class ExprLang
+{
+  public static Hashtable ST = new Hashtable();
+
+  public static void main(String[] args) throws ParseException, FileNotFoundException
+  {
+    String temp;
+    STC temp2;
+
+    if (args.length < 1)
+    {
+      System.out.println("Please pass in the filename.");
+      System.exit(1);
+    }
+
+    ExprLang parser = new ExprLang(new FileInputStream(args[0]));
+
+    SimpleNode root = parser.program();
+
+    System.out.println("Abstract Syntax Tree:");
+
+    root.dump(" ");
+
+    System.out.println();
+    System.out.println("Symbol Table:");
+
+    Enumeration t = ST.keys();
+
+    while (t.hasMoreElements())
+    {
+      temp = (String)t.nextElement();
+      temp2 = (STC)ST.get(temp);
+      System.out.println(temp);
+      if (temp2.type != null)
+      {
+        System.out.println(" type = " + temp2.type);
+      }
+      if (temp2.value != null)
+      {
+        System.out.println(" value = " + temp2.value);
+      }
+    }
+
+    System.out.println();
+    System.out.println("Program:");
+    PrintVisitor pv = new PrintVisitor();
+    root.jjtAccept(pv, null);
+
+    System.out.println();
+    System.out.println("Type Checking:");
+    TypeCheckVisitor tc = new TypeCheckVisitor();
+    root.jjtAccept(tc, ST);    
+  }
+}
+
+PARSER_END(ExprLang)
+
+TOKEN_MGR_DECLS:
+{
+  static int linenumber = 0;
+}
+
+SKIP:   /* Whitespace */
+{
+  "\t"
+| "\n" {linenumber++;}
+| "\r"
+| " "
+}
+
+TOKEN:
+{
+  <LPAREN: "(">
+| <RPAREN: ")">
+| <ADD_OP: "+" | "-">
+| <MULT_OP: "*" | "/">
+| <NOT_OP: "~">
+| <BOOL_OP: "&" | "|">
+| <INT: "int">
+| <BOOL: "bool">
+| <NUMBER: (["0"-"9"])+>
+| <ID: (["a"-"z","A"-"Z"])+>
+| <SEMIC: ";">
+}
+
+
+
+SimpleNode program() : {}
+{
+  Stms() <EOF> {return jjtThis;}
+}
+
+void Stms() #void : {}
+{
+  (SimpleStm() <SEMIC> [Stms() #Stms(2)] )
+}
+
+void SimpleStm() #void : {}
+{
+  (expression())
+ | (declaration())
+}
+
+void declaration() #void : {Token t; String name;}
+{
+  t = <INT> name = identifier() {jjtThis.value = t.image;
+                          ST.put(name, new STC("Int", name));} #Decl(1)
+| t = <BOOL> name = identifier() {jjtThis.value = t.image;
+                           ST.put(name, new STC("Bool", name));} #Decl(1)
+}
+
+
+void expression() #void : {Token t;}
+{
+  term()
+  (
+    (t = <ADD_OP> term() {jjtThis.value = t.image;} #Add_op(2)
+    )
+  | (t = <BOOL_OP> term() {jjtThis.value = t.image;} #Bool_op(2)
+    )
+  )*
+}
+
+void term() #void : {Token t;}
+{
+  <NOT_OP> factor() #Not_op(1)
+|
+  factor()
+  (t = <MULT_OP> factor() {jjtThis.value = t.image;} #Mult_op(2)
+  )*
+}
+
+void factor() #void : {}
+{
+  (<LPAREN> expression() #Exp(1) <RPAREN>
+  | number()
+  | identifier()
+  )
+}
+
+void number() : {Token t;}
+{
+  t = <NUMBER> {jjtThis.value = t.image;
+               }
+}
+
+String identifier() : {Token t;}
+{
+  t = <ID> {jjtThis.value = t.image; return t.image;}
+}
