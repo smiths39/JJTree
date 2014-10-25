@@ -1,5 +1,4 @@
 // Name:PrintVisitor.java
-// Author: David Sinclair      Date: 29 Aug 2012
 //
 // Visitor for "pretty printing" an abstract syntax tree in the ExprLang language
 //
