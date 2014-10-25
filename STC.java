@@ -1,5 +1,4 @@
 // Name:STC.java
-// Author: David Sinclair      Date: 29 Aug 2012
 //
 // Very basic Symbol Table implementation
 //
