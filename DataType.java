@@ -1,5 +1,4 @@
 // Name:DataType.java
-// Author: David Sinclair      Date: 29 Aug 2012
 //
 
 
