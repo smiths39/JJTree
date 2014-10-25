@@ -1,5 +1,4 @@
 // Name:TypeCheckVisitor.java
-// Author: David Sinclair      Date: 29 Aug 2012
 //
 // Visitor for basic type checking expressions in an abstract syntax tree in the ExprLang language
 //
