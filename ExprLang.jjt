@@ -1,6 +1,4 @@
 // Name:ExprLang.jjt
-// Author: David Sinclair      Date: 29 Aug 2012
-//
 // Definition of the ExprLang language, including abstract syntax tree generation
 //
 
